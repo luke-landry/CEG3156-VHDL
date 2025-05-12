@@ -1,1 +1,1 @@
-Repository of reusable VDHL designs for CEG3156.
+Repository of reusable VHDL designs for CEG3156.
