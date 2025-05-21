@@ -2,17 +2,20 @@ library IEEE;
 USE IEEE.std_logic_1164.all;
 
 -- 8 bit register
-entity reg8ASR is
+entity regNASR is
+    generic(
+        n : integer;
+    );
     port ( 
-            d : in std_logic_vector(7 downto 0); -- 8 bit input vector
+            d : in std_logic_vector(n-1 downto 0); -- 8 bit input vector
             clk, load, reset : in STD_LOGIC;
-            q : out std_logic_vector(7 downto 0) -- 8 bit output vector
+            q : out std_logic_vector(n-1 downto 0) -- 8 bit output vector
         );
-end reg8ASR;
+end regNASR;
 
-architecture rtl of reg8ASR is
-    signal int_d : std_logic_vector(7 downto 0);  -- Mux output signal
-    signal int_q : std_logic_vector(7 downto 0);  -- DFF output signal
+architecture rtl of regNASR is
+    signal int_d : std_logic_vector(n-1 downto 0);  -- Mux output signal
+    signal int_q : std_logic_vector(n-1 downto 0);  -- DFF output signal
 
     component m2to1 
     port(
@@ -31,7 +34,7 @@ architecture rtl of reg8ASR is
     end component;
 begin
     
-    gen_m2to1 : for i in 7 downto 0 generate
+    gen_m2to1 : for i in n-1 downto 0 generate
         MuxD : m2to1
         port map (
             d0 => int_q(i),
@@ -41,7 +44,7 @@ begin
         );
     end generate;
 
-    gen_dFF : for i in 7 downto 0 generate
+    gen_dFF : for i in n-1 downto 0 generate
         dFFB : d_FF_ASR
         port map (
             i_clock => clk,
