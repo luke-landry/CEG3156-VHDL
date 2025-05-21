@@ -16,6 +16,14 @@ entity fpMultDP is
 end fpMultDP;
 
 architecture rtl of fpMultDP is
+    
+    component  
+        port (
+
+        );
+    end component;
+
+
 begin
 
 end architecture rtl;
