@@ -8,7 +8,7 @@ entity regNASR is
     );
     port ( 
             d : in std_logic_vector(n-1 downto 0); -- 8 bit input vector
-            clk, load, reset : in STD_LOGIC;
+            clk, load, reset : in std_logic;
             q : out std_logic_vector(n-1 downto 0) -- 8 bit output vector
         );
 end regNASR;
