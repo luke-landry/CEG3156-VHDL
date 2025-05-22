@@ -7,9 +7,9 @@ entity regNASR is
         n : integer;
     );
     port ( 
-            d : in std_logic_vector(n-1 downto 0); -- 8 bit input vector
+            d : in std_logic_vector(n-1 downto 0); -- n bit input vector
             clk, load, reset : in std_logic;
-            q : out std_logic_vector(n-1 downto 0) -- 8 bit output vector
+            q : out std_logic_vector(n-1 downto 0) -- n bit output vector
         );
 end regNASR;
 
@@ -60,5 +60,3 @@ begin
     q <= int_q;
 
 end architecture rtl;
-            
-            
