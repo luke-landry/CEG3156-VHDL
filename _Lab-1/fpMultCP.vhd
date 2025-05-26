@@ -6,7 +6,7 @@ entity fpMultCP is
     port(
         clock, reset : in std_logic;
         eq0, eq1, eq2, rORs, v : in std_logic;
-        lA, lB, LEA, lEB, lMA, lMB, m50, m00, lMR, slMR, m1, clr, lSO, lEO, addPsub, lMO, m01 : out std_logic;
+        lA, lB, lEA, lEB, lMA, lMB, m50, m00, lMR, slMR, m1, clr, lSO, lEO, addbar_sub, lMO, m01 : out std_logic;
     );
 end fpMultCP;
 
@@ -39,8 +39,8 @@ begin
     genDFF : for i in 8 downto 0 generate
         dff1 : d_FF_ASR
         port map(
-            i_set => 1, 
-            i_reset => 1,
+            i_set => '1', 
+            i_reset => '1',
             i_d => int_d(i),
             i_clock => clock,
             o_q => state(i),
@@ -50,7 +50,7 @@ begin
 
     lA <= state(0); 
     lB <= state(0);
-    LEA <= state(0);
+    lEA <= state(0);
     lEB <= state(0);
     lMA <= state(0);
     lMB <= state(0);
@@ -62,7 +62,7 @@ begin
     clr <= state(7);
     lSO <= state(8);
     lEO <= state(1) or state(2) or state(3) or state(4) or state(7);
-    addPsub <= state(2) or state(3) or state(4) or state(7); 
+    addbar_sub <= state(2) or state(3) or state(4) or state(7); 
     lMO <= state(5) or state(6);
     m01 <= state(3) or state(4) or state(7);
 
