@@ -136,7 +136,7 @@ architecture structural of shiftRegN is
         -- Using loop bounds i = 2 to n-1 to cover middle bits (bit index = n - i)
         -- This allows n = 2 to be valid, because i = 2 to 1 is a legal empty loop
         -- A loop from i = 1 to n-2 would be invalid when n = 2 (i = 1 to 0 is illegal in VHDL)
-        for i in 2 to n-1 generate
+        genBits : for i in 2 to n-1 generate
             shiftMuxi : m2to1
             port map(
                 d0 => int_q((n-i)+1), -- rshift gets input from register to left
