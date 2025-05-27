@@ -4,7 +4,7 @@ USE IEEE.std_logic_1164.all;
 -- 8 bit register
 entity regNASR is
     generic(
-        n : integer;
+        n : integer
     );
     port ( 
             d : in std_logic_vector(n-1 downto 0); -- n bit input vector

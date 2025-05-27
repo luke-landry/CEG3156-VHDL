@@ -2,7 +2,7 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
 -- Full adder
-entity fpMultDP is
+entity fpMultDPDEBUG is
     port(
         gClock, gReset : in std_logic;
         signA, signB : in std_logic;
@@ -16,9 +16,9 @@ entity fpMultDP is
         lA, lB, lEA, lEB, lMA, lMB, m50, m00, lMR, slMR, m1, clr, lSO, lEO, addbar_sub, lMO, m01 : in std_logic;
         eq0, eq1, eq2, rORs, v : out std_logic
     );
-end fpMultDP;
+end fpMultDPDEBUG;
 
-architecture rtl of fpMultDP is
+architecture rtl of fpMultDPDEBUG is
     signal sAQ, sBQ, sOQ, overF : std_logic;
     signal lAQ, lBQ, mAQ, mbQ, add0Out, add1Out, lEOQ, lMOQ : std_logic_vector(7 downto 0);
     signal mux5Q, mux0Q, mux1Q : std_logic_vector(7 downto 0);

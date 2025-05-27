@@ -2,15 +2,16 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
 -- Full adder
-entity fpMultCP is
+entity fpMultCPDEBUG is
     port(
         clock, reset : in std_logic;
         eq0, eq1, eq2, rORs, v : in std_logic;
-        lA, lB, lEA, lEB, lMA, lMB, m50, m00, lMR, slMR, m1, clr, lSO, lEO, addbar_sub, lMO, m01 : out std_logic
+        lA, lB, lEA, lEB, lMA, lMB, m50, m00, lMR, slMR, m1, clr, lSO, lEO, addbar_sub, lMO, m01 : out std_logic;
+        stateOut : out std_logic_vector(8 downto 0)
     );
-end fpMultCP;
+end fpMultCPDEBUG;
 
-architecture rtl of fpMultCP is
+architecture rtl of fpMultCPDEBUG is
     signal state : std_logic_vector(8 downto 0);
     signal int_d : std_logic_vector(8 downto 0);
 
@@ -25,6 +26,9 @@ architecture rtl of fpMultCP is
     end component;
 
 begin
+    stateOut <= state;
+
+
 
     int_d(0) <= not(reset);
     int_d(1) <= state(0) and reset;
