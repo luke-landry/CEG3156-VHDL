@@ -289,7 +289,8 @@ begin
     rORs <= reg18Q(7) or reg18Q(6) or reg18Q(5) or reg18Q(4) or reg18Q(3) or reg18Q(2) or reg18Q(1) or reg18Q(0);
 
     v <= overF;
-    overFlow <= overF;
+    -- overFlow <= overF;
+    overFlow <= '0';
     exponentOut <= lEOQ(6 downto 0);
     mantissaOut <= lMOQ;
 
