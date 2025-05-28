@@ -2,9 +2,9 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 
-entity fpMultTop is
+entity fpMult is
     Port (
-        gClock, reset : in  std_logic;
+        gClock, gReset : in  std_logic;
         signA, signB : in  std_logic;
         manA, manB : in  std_logic_vector(7 downto 0);
         expA, expB : in std_logic_vector(6 downto 0);
@@ -12,9 +12,9 @@ entity fpMultTop is
         manOut : out std_logic_vector(7 downto 0);
         signOut, overFlow : out std_logic
     );
-end fpMultTop;
+end fpMult;
 
-architecture Structural of fpMultTop is
+architecture Structural of fpMult is
 
     signal lA, lB, lEA, lEB, lMA, lMB, m50, m00, lMR, slMR, m1, clr, lSO, lEO, addbar_sub, lMO, m01 : std_logic;
     signal eq0, eq1, eq2, rORs, v : std_logic;
@@ -47,8 +47,8 @@ architecture Structural of fpMultTop is
 begin
     controlP: fpMultCP
         port map (
-            clock        => clock,
-            reset        => reset,
+            clock        => gClock,
+            reset        => gReset,
             eq0          => eq0,
             eq1          => eq1,
             eq2          => eq2,

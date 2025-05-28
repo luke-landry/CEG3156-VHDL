@@ -61,8 +61,8 @@ begin
     m1 <= state(6);
     clr <= state(7);
     lSO <= state(8);
-    lEO <= state(1) or state(2) or state(3) or state(4) or state(7);
-    addbar_sub <= state(2) or state(3) or state(4) or state(7); 
+    lEO <= state(1) or state(2) or state(4) or state(7);
+    addbar_sub <= state(2) or state(4) or state(7); 
     lMO <= state(5) or state(6);
     m01 <= state(3) or state(4) or state(7);
 

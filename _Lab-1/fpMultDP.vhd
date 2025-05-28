@@ -54,6 +54,13 @@ architecture rtl of fpMultDP is
         );
     end component;
 
+    component u_mult_9b is
+        port(
+            opA, opB : in std_logic_vector(8 downto 0);
+            res      : out std_logic_vector(17 downto 0)
+        );
+    end component;
+
     component m8x4to1 is
         port (
             d0, d1, d2, d3 : in std_logic_vector(7 downto 0);   -- d0, d1, d2, d3 are 8 bit data inputs
@@ -174,8 +181,8 @@ begin
         q => mBQ
     );
 
-    shiftSel(1) <= slMR;
-    shiftSel(0) <= lMR;
+    shiftSel(0) <= slMR;
+    shiftSel(1) <= lMR;
     reg18 : shiftRegN
     generic map(
         n => 18
@@ -230,6 +237,13 @@ begin
         addbar_sub => '0',
         s => add1Out,
         cOut => overF
+    );
+
+    multiplier : u_mult_9b
+    port map(
+            opA => '1' & mAQ, 
+            opB => '1' & mBQ,
+            res => mult9Q
     );
 
     mux2_0 : m8x2to1
