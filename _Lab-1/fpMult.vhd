@@ -20,7 +20,7 @@ architecture Structural of fpMultTop is
     signal eq0, eq1, eq2, rORs, v : std_logic;
 
 
-    component fpMultDPDEBUG is
+    component fpMultDP is
     port(
         gClock, gReset : in std_logic;
         signA, signB : in std_logic;
@@ -36,7 +36,7 @@ architecture Structural of fpMultTop is
     );
     end component;
 
-    component fpMultCPDEBUG is
+    component fpMultCP is
     port(
         clock, reset : in std_logic;
         eq0, eq1, eq2, rORs, v : in std_logic;
@@ -45,7 +45,7 @@ architecture Structural of fpMultTop is
     end component;
 
 begin
-    controlP: fpMultCPDEBUG
+    controlP: fpMultCP
         port map (
             clock        => clock,
             reset        => reset,
@@ -74,7 +74,7 @@ begin
             m01          => m01
         );
 
-    dataP: fpMultDPDEBUG
+    dataP: fpMultDP
         port map (
             gClock        => gClock,
             gReset        => gReset,

@@ -7,7 +7,7 @@ entity fpMultCPDEBUG is
         clock, reset : in std_logic;
         eq0, eq1, eq2, rORs, v : in std_logic;
         lA, lB, lEA, lEB, lMA, lMB, m50, m00, lMR, slMR, m1, clr, lSO, lEO, addbar_sub, lMO, m01 : out std_logic;
-        stateOut : out std_logic_vector(8 downto 0)
+        stateOut, int_Out : out std_logic_vector(8 downto 0)
     );
 end fpMultCPDEBUG;
 
@@ -27,7 +27,7 @@ architecture rtl of fpMultCPDEBUG is
 
 begin
     stateOut <= state;
-
+    int_Out <= int_d;
 
 
     int_d(0) <= not(reset);
@@ -65,8 +65,8 @@ begin
     m1 <= state(6);
     clr <= state(7);
     lSO <= state(8);
-    lEO <= state(1) or state(2) or state(3) or state(4) or state(7);
-    addbar_sub <= state(2) or state(3) or state(4) or state(7); 
+    lEO <= state(1) or state(2) or state(4) or state(7);
+    addbar_sub <= state(2) or state(4) or state(7); 
     lMO <= state(5) or state(6);
     m01 <= state(3) or state(4) or state(7);
 

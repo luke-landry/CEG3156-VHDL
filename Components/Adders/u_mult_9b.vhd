@@ -1,14 +1,14 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity u_mult_test is
+entity u_mult_9b is
     port(
         opA, opB : in std_logic_vector(8 downto 0);
         res      : out std_logic_vector(17 downto 0)
     );
-end u_mult_test;
+end u_mult_9b;
 
-architecture rtl of u_mult_test is
+architecture rtl of u_mult_9b is
     component adder1bit
         port(
             a, b, cIn : in std_logic;

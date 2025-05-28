@@ -14,7 +14,10 @@ entity fpMultDPDEBUG is
         exponentOut : out std_logic_vector(6 downto 0);
 
         lA, lB, lEA, lEB, lMA, lMB, m50, m00, lMR, slMR, m1, clr, lSO, lEO, addbar_sub, lMO, m01 : in std_logic;
-        eq0, eq1, eq2, rORs, v : out std_logic
+        eq0, eq1, eq2, rORs, v : out std_logic;
+
+
+        reg18Out : out std_logic_vector(17 downto 0) 
     );
 end fpMultDPDEBUG;
 
@@ -51,6 +54,13 @@ architecture rtl of fpMultDPDEBUG is
             addbar_sub : in std_logic;
             s : out std_logic_vector(7 downto 0); 
             cOut : out std_logic
+        );
+    end component;
+
+    component u_mult_9b is
+        port(
+            opA, opB : in std_logic_vector(8 downto 0);
+            res      : out std_logic_vector(17 downto 0)
         );
     end component;
 
@@ -93,6 +103,12 @@ architecture rtl of fpMultDPDEBUG is
     end component;
 
 begin
+    reg18Out <= reg18Q;
+
+
+
+
+
 
     signAReg : d_FF_ASR
     port map(
@@ -174,8 +190,8 @@ begin
         q => mBQ
     );
 
-    shiftSel(1) <= slMR;
-    shiftSel(0) <= lMR;
+    shiftSel(0) <= slMR;
+    shiftSel(1) <= lMR;
     reg18 : shiftRegN
     generic map(
         n => 18
@@ -230,6 +246,13 @@ begin
         addbar_sub => '0',
         s => add1Out,
         cOut => overF
+    );
+
+    multiplier : u_mult_9b
+    port map(
+            opA => '1' & mAQ, 
+            opB => '1' & mBQ,
+            res => mult9Q
     );
 
     mux2_0 : m8x2to1
