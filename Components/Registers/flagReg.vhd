@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 
 entity flagReg is
     port(
-        clk, reset : in std_Logic;
+        clk, reset : in std_logic;
         d, syncSet, syncReset, load : in std_logic;
         q : out std_logic
     );
