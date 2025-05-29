@@ -5,20 +5,23 @@ use ieee.std_logic_1164.all;
 
 entity aluNbit is
     generic(
-        n : integer -- must be >= 2
+        n : integer -- must be >= 3
     );
     port(
         a, b : in std_logic_vector((n-1) downto 0);
         addbar_sub : in std_logic;
 
         result : out std_logic_vector((n-1) downto 0);
-        cOut : out std_logic
+        cOut, zero : out std_logic
     );
 end entity aluNbit;
 
 architecture structural of aluNbit is
 
     signal int_cOut, int_result : std_logic_vector((n-1) downto 0);
+
+    -- scalable structure to hold OR of entire result
+    signal int_resultOr : std_logic_vector((n-2) downto 0);
 
     component aluBlock
     port (
@@ -28,6 +31,9 @@ architecture structural of aluNbit is
     end component;
 
     begin
+
+    -- ensure that bit width is >= 3
+    assert n >= 3 report "Bit width (n) of aluNbit must be >= 3" severity failure;
 
     aluLSB : aluBlock
     port map(
@@ -39,20 +45,16 @@ architecture structural of aluNbit is
         cOut => int_cOut(0)
     );
 
-    
-    -- Defining components for bits between MSB and LSB of register
-    -- Using loop bounds i = 2 to n-1 to cover middle bits (bit index = n - i)
-    -- This allows n = 2 to be valid, because i = 2 to 1 is a legal empty loop
-    -- A loop from i = 1 to n-2 would be invalid when n = 2 (i = 1 to 0 is illegal in VHDL)
-    genBits : for i in 2 to n-1 generate
+    -- generate middle bits between MSB and LSB
+    genBits : for i in 1 to n-2 generate
         aluBi : aluBlock
         port map(
-            a => a(n-i),
-            b => b(n-i),
-            cIn => int_cOut(n-i-1),
+            a => a(i),
+            b => b(i),
+            cIn => int_cOut(i-1),
             addbar_sub => addbar_sub,
-            result => int_result(0),
-            cOut => int_cOut(0)
+            result => int_result(i),
+            cOut => int_cOut(i)
         );
     end generate;
 
@@ -67,9 +69,14 @@ architecture structural of aluNbit is
         cOut => int_cOut(n-1)
     );
 
+    -- Using OR of all result bits to determine zero flag
+    int_resultOr(0) <= int_result(0) or int_result(1);
+    genOR : for i in 2 to n-1 generate
+        int_resultOr(i-1) <= int_resultOr(i-2) or int_result(i);
+    end generate;
 
+    zero <= not int_resultOr(n-2);
     result <= int_result;
     cOut <= int_cOut(n-1);
-
 
 end architecture structural;
