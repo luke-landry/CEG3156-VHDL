@@ -18,6 +18,9 @@ architecture structural of compNbit is
     signal int_cOut, int_zero : std_logic;
 
     component aluNbit
+    generic (
+        n : integer
+    );
     port (
             a, b : in std_logic_vector((n-1) downto 0);
             addbar_sub : in std_logic;
