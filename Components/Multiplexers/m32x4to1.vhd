@@ -22,7 +22,7 @@ architecture rtl of m32x4to1 is
 
 begin
 
-    -- Structural generate for 32-bit wide mux using 1-bit m4to1 components
+    -- Generate 32-bit wide mux using 1-bit m4to1 components
     gen_mux: for i in 0 to 31 generate
         mux_inst: m4to1
             port map (

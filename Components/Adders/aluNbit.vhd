@@ -19,15 +19,23 @@ end entity aluNbit;
 architecture structural of aluNbit is
 
     signal int_cOut, int_result : std_logic_vector((n-1) downto 0);
-
-    -- scalable structure to hold OR of entire result
-    signal int_resultOr : std_logic_vector((n-2) downto 0);
+    signal int_resultOr : std_logic;
 
     component aluBlock
     port (
             a, b, cIn, addbar_sub : in std_logic;
             result, cOut : out std_logic
         );
+    end component;
+
+    component orNbit
+    generic(
+        n : integer
+    );
+    port(
+        d : in std_logic_vector((n-1) downto 0);
+        q : out std_logic
+    );
     end component;
 
     begin
@@ -69,13 +77,16 @@ architecture structural of aluNbit is
         cOut => int_cOut(n-1)
     );
 
-    -- Using OR of all result bits to determine zero flag
-    int_resultOr(0) <= int_result(0) or int_result(1);
-    genOR : for i in 2 to n-1 generate
-        int_resultOr(i-1) <= int_resultOr(i-2) or int_result(i);
-    end generate;
+    resultOr : orNbit
+    generic map(
+        n => n
+    )
+    port map(
+        d => int_result,
+        q => int_resultOr
+    );
 
-    zero <= not int_resultOr(n-2);
+    zero <= not int_resultOr;
     result <= int_result;
     cOut <= int_cOut(n-1);
 
