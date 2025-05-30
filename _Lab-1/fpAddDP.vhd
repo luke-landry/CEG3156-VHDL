@@ -29,6 +29,7 @@ entity fpAddDP is
         sgfdAgtB, sgfdAeqB, sgfdAltB : out std_logic;
         shiftCountltExpDif : out std_logic;
         alu32bCout, roundUp : out std_logic;
+        overflow : out std_logic;
 
         -- debug outputs
         db_signA, db_signB : out std_logic;
@@ -44,6 +45,7 @@ architecture structural of fpAddDP is
 
     -- Data widths for exponent and significand components within the datapath
     constant expWidth : integer := 8;
+    constant manWidth : integer := 8;
     constant sgfdWidth : integer := 32;
 
     -- Value to add at guard bit position in round-up increment
@@ -159,13 +161,13 @@ architecture structural of fpAddDP is
 
     -- Signals
     signal s_signA, s_signB : std_logic;
-    signal s_expA, s_expB, s_expDif, s_expRes, s_alu8b : std_logic_vector(7 downto 0);
+    signal s_expA, s_expB, s_expDif, s_expRes, s_alu8b: std_logic_vector(7 downto 0);
     signal s_sgfdA, s_sgfdB, s_shiftReg, s_alu32b : std_logic_vector(31 downto 0);
     signal s_guardBit, s_roundBit, s_stickyBit : std_logic;
     signal s_muxSgfdA, s_muxSgfdB, s_muxAlu8bX, s_muxAlu8bY, s_muxAlu32bX, s_muxAlu32bY, s_muxShR, s_muxExpRes : std_logic;
     signal s_shiftRegOpSel : std_logic_vector(1 downto 0);
     signal s_shiftRegShiftL_RBar : std_logic;
-    signal s_shiftCount, s_shiftCountltExpDif : std_logic;
+    signal s_shiftCount : std_logic_vector(7 downto 0);
 
 begin
 
@@ -301,7 +303,7 @@ begin
         d0 => s_expA,
         d1 => s_expRes,
         d2 => s_shiftCount,
-        d3 => '0',
+        d3 => "00000000",
         s0 => selAlu8bX(0),
         s1 => selAlu8bX(1),
         q => s_muxAlu8bX
@@ -312,7 +314,7 @@ begin
         d0 => s_expB,
         d1 => s_expRes,
         d2 => s_expDif,
-        d3 => '1',
+        d3 => "00000001",
         s0 => selAlu8bY(0),
         s1 => selAlu8bY(1),
         q => s_muxAlu8bY
@@ -352,7 +354,7 @@ begin
         d3 => b22Set_32b,
         s0 => selAlu32bY(0),
         s1 => selAlu32bY(1),
-        q => s_muxAlu8bY
+        q => s_muxAlu32bY
     );
 
     alu32b : aluNbit
@@ -441,7 +443,7 @@ begin
         clk => clk,
         load => loadShiftCount,
         reset => reset,
-        q => s_expDif
+        q => s_shiftCount
     );
 
     compExpShift : compNbit
@@ -451,10 +453,83 @@ begin
     port map(
         a => s_shiftCount,
         b => s_expDif,
-        altb => s_shiftCountltExpDif, 
+        altb => shiftCountltExpDif, 
         aeqb => open, 
         agtb => open
     );
 
+    -- Result storage
+
+    
+    regSignRes : flagReg
+    port map(
+        clk => clk,
+        reset => reset,
+        d => s_signA,
+        syncSet => setSignRes,
+        syncReset => clrSignRes,
+        load => loadSignRes,
+        q => signResult
+    );
+
+    muxExpRes : m8x4to1
+    port map(
+        d0 => s_expA,
+        d1 => s_expB,
+        d2 => s_alu8b,
+        d3 => s_alu8b,
+        s0 => selLdExpRes(0),
+        s1 => selLdExpRes(1),
+        q => s_muxExpRes
+    );
+
+    regExpRes : regNASR
+    generic map(
+        n => expWidth
+    )
+    port map(
+        d => s_muxExpRes,
+        clk => clk,
+        load => loadExpRes,
+        reset => reset,
+        q => s_expRes
+    );
+
+    exponentResult <= s_expRes(6 downto 0); -- only 7 bits of exponent
+
+    regManRes : regNASR
+    generic map(
+        n => manWidth -- 8 bit
+    )
+    port map(
+        d => s_shiftReg(29 downto 22), -- 8 bits of mantissa after decimal
+        clk => clk,
+        load => loadManRes,
+        reset => reset,
+        q => mantissaResult
+    );
+
+    -- Overflow flag
+
+    regOverflow : flagReg
+    port map(
+        clk => clk,
+        reset => reset,
+        d => '0',
+        syncSet => setOverflow,
+        syncReset => '0',
+        load => '0',
+        q => overflow
+    );
+
+    -- Debug assignments
+
+    db_signA <= s_signA;
+    db_signB <= s_signB;
+    db_expA <= s_expA;
+    db_expB <= s_expB;
+    db_expDif <= s_expDif;
+    db_sgfdA <= s_sgfdA;
+    db_sgfdB <= s_sgfdB;
 
 end architecture structural;
