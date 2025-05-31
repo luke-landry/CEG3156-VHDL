@@ -13,10 +13,11 @@ entity fpAddDP is
         signResult : out std_logic;
         exponentResult : out std_logic_vector(6 downto 0);
         mantissaResult : out std_logic_vector(7 downto 0);
+        overflow : out std_logic;
 
         -- control signals
         loadSignA, loadExpA, loadSgfdA, loadSignB, loadExpB, loadSgfdB : in std_logic;
-        selLdSgfdAShR, selLdSgfdBShR : in std_logic;
+        selLdSgfdAShR, selLdSgfdBShR, selLdManResClr : in std_logic;
         selAlu8bX, selAlu8bY, selAlu32bX, selAlu32bY, selLdShR, selLdExpRes : in std_logic_vector(1 downto 0);
         LSShR, RSShR, loadShR : in std_logic;
         loadExpDif, loadShiftCount, loadSignRes, loadExpRes, loadManRes : in std_logic;
@@ -24,15 +25,15 @@ entity fpAddDP is
         alu8bAddBarSub, alu32bAddBarSub : in std_logic;
 
         -- status signals
-        signAgtB, signAeqB, signAltB : out std_logic;
-        expAgtB, expAeqB, expAltB : out std_logic;
-        sgfdAgtB, sgfdAeqB, sgfdAltB : out std_logic;
+        signAStored : out std_logic;
+        signAeqB : out std_logic;
+        expAeqB, expAltB : out std_logic;
+        sgfdAeqB, sgfdAltB : out std_logic;
         shiftCountltExpDif : out std_logic;
         alu32bCout, roundUp : out std_logic;
-        overflow : out std_logic;
+        shiftRegMSB, shiftReg2ndMSB : out std_logic;
 
         -- debug outputs
-        db_signA, db_signB : out std_logic;
         db_expA, db_expB, db_expDif : out std_logic_vector(7 downto 0);
         db_sgfdA, db_sgfdB : out std_logic_vector(31 downto 0);
 
@@ -42,14 +43,6 @@ entity fpAddDP is
 end entity fpAddDP;
 
 architecture structural of fpAddDP is
-
-    -- Data widths for exponent and significand components within the datapath
-    constant expWidth : integer := 8;
-    constant manWidth : integer := 8;
-    constant sgfdWidth : integer := 32;
-
-    -- Value to add at guard bit position in round-up increment
-    constant b22Set_32b : std_logic_vector(31 downto 0) := "00000000010000000000000000000000";
 
     -- Components
 
@@ -90,6 +83,14 @@ architecture structural of fpAddDP is
     end component;
 
     ---- multiplexers
+    component m8x2to1
+        port(
+            d0, d1 : in std_logic_vector(7 downto 0);   -- d0, d1 are 8 bit data inputs
+            s0 : in std_logic;                          -- s0 is the select input
+            q : out std_logic_vector(7 downto 0)        -- q0 is 8 bit data output     
+        );
+    end component;
+
     component m8x4to1
         port(
             d0, d1, d2, d3 : in std_logic_vector(7 downto 0);   -- d0, d1, d2, d3 are 8 bit data inputs
@@ -159,12 +160,21 @@ architecture structural of fpAddDP is
         );
     end component;
 
+    -- Data widths for exponent and significand components within the datapath
+    constant expWidth : integer := 8;
+    constant manWidth : integer := 8;
+    constant sgfdWidth : integer := 32;
+
+    -- Value to add at guard bit position in round-up increment
+    constant b22Set_32b : std_logic_vector(31 downto 0) := "00000000010000000000000000000000";
+
     -- Signals
     signal s_signA, s_signB : std_logic;
-    signal s_expA, s_expB, s_expDif, s_expRes, s_alu8b: std_logic_vector(7 downto 0);
-    signal s_sgfdA, s_sgfdB, s_shiftReg, s_alu32b : std_logic_vector(31 downto 0);
+    signal s_expA, s_expB, s_expDif, s_expRes, s_alu8b : std_logic_vector((expWidth-1) downto 0);
+    signal s_sgfdA, s_sgfdB, s_shiftReg, s_alu32b : std_logic_vector((sgfdWidth-1) downto 0);
     signal s_guardBit, s_roundBit, s_stickyBit : std_logic;
-    signal s_muxSgfdA, s_muxSgfdB, s_muxAlu8bX, s_muxAlu8bY, s_muxAlu32bX, s_muxAlu32bY, s_muxShR, s_muxExpRes : std_logic;
+    signal s_muxSgfdA, s_muxSgfdB, s_muxAlu32bX, s_muxAlu32bY, s_muxShR : std_logic_vector((sgfdWidth-1) downto 0);
+    signal s_muxAlu8bX, s_muxAlu8bY, s_muxExpRes, s_muxManRes : std_logic_vector((expWidth-1) downto 0);
     signal s_shiftRegOpSel : std_logic_vector(1 downto 0);
     signal s_shiftRegShiftL_RBar : std_logic;
     signal s_shiftCount : std_logic_vector(7 downto 0);
@@ -183,6 +193,7 @@ begin
         load => loadSignA,
         q => s_signA
     );
+    signAStored <= s_signA;
 
     regExpA : regNASR
     generic map(
@@ -268,8 +279,8 @@ begin
         x => s_signA,
         y => s_signB,
         equal => signAeqB,
-        lesser => signAltB,
-        greater =>signAgtB
+        lesser => open,
+        greater => open
     );
 
     compExp : compNbit
@@ -281,7 +292,7 @@ begin
         b => s_expB,
         altb => expAltB, 
         aeqb => expAeqB, 
-        agtb => expAgtB
+        agtb => open
     );
 
     compSgfd : compNbit
@@ -293,7 +304,7 @@ begin
         b => s_sgfdB,
         altb => sgfdAltB, 
         aeqb => sgfdAeqB, 
-        agtb => sgfdAgtB
+        agtb => open
     );
 
     -- 8 bit ALU
@@ -405,6 +416,9 @@ begin
         reset => reset
     );
 
+    shiftRegMSB <= s_shiftReg(sgfdWidth-1);
+    shiftReg2ndMSB <= s_shiftReg(sgfdWidth-2);
+
     -- Rounding signals
     s_guardbit <= s_shiftReg(22);
     s_roundBit <= s_shiftReg(21);
@@ -459,7 +473,6 @@ begin
     );
 
     -- Result storage
-
     
     regSignRes : flagReg
     port map(
@@ -477,7 +490,7 @@ begin
         d0 => s_expA,
         d1 => s_expB,
         d2 => s_alu8b,
-        d3 => s_alu8b,
+        d3 => "00000000",
         s0 => selLdExpRes(0),
         s1 => selLdExpRes(1),
         q => s_muxExpRes
@@ -497,12 +510,20 @@ begin
 
     exponentResult <= s_expRes(6 downto 0); -- only 7 bits of exponent
 
+    muxManRes : m8x2to1
+    port map(
+        d0 => s_shiftReg(29 downto 22), -- 8 bits of mantissa after decimal
+        d1 => "00000000",
+        s0 => selLdManResClr,
+        q => s_muxManRes
+    );
+
     regManRes : regNASR
     generic map(
         n => manWidth -- 8 bit
     )
     port map(
-        d => s_shiftReg(29 downto 22), -- 8 bits of mantissa after decimal
+        d => s_muxManRes,
         clk => clk,
         load => loadManRes,
         reset => reset,
@@ -523,9 +544,6 @@ begin
     );
 
     -- Debug assignments
-
-    db_signA <= s_signA;
-    db_signB <= s_signB;
     db_expA <= s_expA;
     db_expB <= s_expB;
     db_expDif <= s_expDif;
