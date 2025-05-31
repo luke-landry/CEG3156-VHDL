@@ -46,6 +46,9 @@ architecture rtl of fpAddCP is
     signal d : std_logic_vector((num_states-1) downto 0);
     signal s : std_logic_vector((num_states-1) downto 0);
 
+    -- additional states (added after initial design)
+    signal d0a, s0a : std_logic;
+
     -- intermediate signals
     signal s_alignShifted, s_bAligned, s_aAligned, s_alignDone : std_logic;
     signal s_sameValSub, s_nmrlRSCheck, s_sgfdSub : std_logic;
@@ -55,7 +58,7 @@ architecture rtl of fpAddCP is
 begin
 
     -- initial state
-    dff0 : d_FF_ASR
+    dff_s0 : d_FF_ASR
     port map(
         i_set => reset, -- set initial state on system reset
         i_reset => '1',
@@ -66,7 +69,7 @@ begin
     );
 
     genDFF : for i in 1 to (num_states-1) generate
-        dffi : d_FF_ASR
+        dff_si : d_FF_ASR
         port map(
             i_set => '1', 
             i_reset => reset,
@@ -77,10 +80,21 @@ begin
         );
     end generate;
 
+    -- additional states
+    dff_s0a : d_FF_ASR
+    port map(
+        i_set => '1', -- set initial state on system reset
+        i_reset => reset,
+        i_d => d0a,
+        i_clock => clock,
+        o_q => s0a,
+        o_qBar => open
+    );
+
     s_alignShifted <= (s(2) or s(4) or s(6)) and (not shiftCountltExpDif);
     s_bAligned <= s_alignShifted and (not expAltB);
     s_aAligned <= s_alignShifted and expAltB;
-    s_alignDone <= (s(0) and expAeqB) or s(7) or s(8);
+    s_alignDone <= s0a or s(7) or s(8);
     s_sameValSub <= s_alignDone and (not signAeqB) and sgfdAeqB;
     s_nmrlRSCheck <= (s(10) and (not alu32bCout)) or s(19);
     s_sgfdSub <= s_alignDone and (not signAeqB) and (not sgfdAeqB);
@@ -92,6 +106,7 @@ begin
     s_roundCheck <= (s_nmrlRSCheck and (not shiftRegMSB)) or s(12) or (s_nmrlLSCheck and (not shiftReg2ndMSB));
 
     d(0) <= '0';
+    d0a  <= s(0) and expAeqB;
     d(1) <= s(0) and (not expAeqB);
     d(2) <= s(1) and (not expAltB);
     d(3) <= s(1) and expAltB;
@@ -140,7 +155,7 @@ begin
     loadExpDif <= s(1) or s(3);
     loadShiftCount <= s(5);
     loadSignRes <= s(10);
-    loadExpRes <= s(0) or s(2) or s(4) or s(9) or s(12) or s(18);
+    loadExpRes <= s0a or s(2) or s(4) or s(9) or s(12) or s(18);
     loadManRes <= s(9) or s(20);
     clrSignRes <= s(9) or s(14) or s(15);
     setSignRes <= s(13) or s(16);
