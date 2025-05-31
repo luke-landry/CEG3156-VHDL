@@ -88,7 +88,7 @@ begin
     s_AsubBPRes <= s_sgfdSub and (not signAStored) and (not sgfdAltB);
     s_BsubAPres <= s_sgfdSub and signAStored and sgfdAltB;
     s_AsubBNres <= s_sgfdSub and signAStored and (not sgfdAltB);
-    s_nmrlLSCheck <= s(13) + s(14) + s(15) + s(16) + s(18);
+    s_nmrlLSCheck <= s(13) or s(14) or s(15) or s(16) or s(18);
     s_roundCheck <= (s_nmrlRSCheck and (not shiftRegMSB)) or s(12) or (s_nmrlLSCheck and (not shiftReg2ndMSB));
 
     d(0) <= '0';

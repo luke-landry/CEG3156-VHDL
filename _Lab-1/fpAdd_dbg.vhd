@@ -1,7 +1,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity fpAdd is
+entity fpAdd_dbg is
     Port (
         -- global control
         clk, reset : in std_logic;
@@ -27,9 +27,9 @@ entity fpAdd is
         db_sgfdB : out std_logic_vector(31 downto 0)
 
     );
-end fpAdd;
+end fpAdd_dbg;
 
-architecture Structural of fpAdd is
+architecture Structural of fpAdd_dbg is
 
     -- Control signals
     signal loadSignA, loadExpA, loadSgfdA : std_logic;
