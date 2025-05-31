@@ -24,7 +24,8 @@ entity fpAdd_dbg is
         db_expB  : out std_logic_vector(7 downto 0);
         db_expDif : out std_logic_vector(7 downto 0);
         db_sgfdA : out std_logic_vector(31 downto 0);
-        db_sgfdB : out std_logic_vector(31 downto 0)
+        db_sgfdB : out std_logic_vector(31 downto 0);
+        db_shiftReg : out std_logic_vector(31 downto 0)
 
     );
 end fpAdd_dbg;
@@ -104,7 +105,7 @@ architecture Structural of fpAdd_dbg is
             shiftRegMSB, shiftReg2ndMSB : out std_logic;
 
             db_expA, db_expB, db_expDif : out std_logic_vector(7 downto 0);
-            db_sgfdA, db_sgfdB : out std_logic_vector(31 downto 0);
+            db_sgfdA, db_sgfdB, db_shiftReg : out std_logic_vector(31 downto 0);
 
             clk, reset : in std_logic
         );
@@ -221,6 +222,7 @@ begin
             db_expDif    => db_expDif,
             db_sgfdA     => db_sgfdA,
             db_sgfdB     => db_sgfdB,
+            db_shiftReg  => db_shiftReg,
 
             clk          => clk,
             reset        => reset

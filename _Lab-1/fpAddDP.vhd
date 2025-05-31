@@ -35,7 +35,7 @@ entity fpAddDP is
 
         -- debug outputs
         db_expA, db_expB, db_expDif : out std_logic_vector(7 downto 0);
-        db_sgfdA, db_sgfdB : out std_logic_vector(31 downto 0);
+        db_sgfdA, db_sgfdB, db_shiftReg : out std_logic_vector(31 downto 0);
 
         -- global system
         clk, reset : in std_logic
@@ -549,5 +549,6 @@ begin
     db_expDif <= s_expDif;
     db_sgfdA <= s_sgfdA;
     db_sgfdB <= s_sgfdB;
+    db_shiftReg <= s_shiftReg;
 
 end architecture structural;
