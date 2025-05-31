@@ -140,7 +140,7 @@ begin
     loadExpDif <= s(1) or s(3);
     loadShiftCount <= s(5);
     loadSignRes <= s(10);
-    loadExpRes <= s(2) or s(4) or s(9) or s(12) or s(18);
+    loadExpRes <= s(0) or s(2) or s(4) or s(9) or s(12) or s(18);
     loadManRes <= s(9) or s(20);
     clrSignRes <= s(9) or s(14) or s(15);
     setSignRes <= s(13) or s(16);
