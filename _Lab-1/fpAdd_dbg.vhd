@@ -36,7 +36,7 @@ entity fpAdd_dbg is
         db_ss_alu32bCout         : out std_logic;
         db_ss_roundUp            : out std_logic;
         db_ss_shiftRegMSB : out std_logic;
-        db_ss_shiftReg2ndMSB : out std_logic
+        db_ss_shiftReg2ndMSB : out std_logic;
 
         -- debug control signals
         -- db_cs_loadSignA, db_cs_loadExpA, db_cs_loadSgfdA : out std_logic;
@@ -50,6 +50,20 @@ entity fpAdd_dbg is
         -- db_cs_clrSignRes, db_cs_setSignRes, db_cs_setOverflow : out std_logic;
         -- db_cs_alu8bAddBarSub, db_cs_alu32bAddBarSub : out std_logic;
 
+        -- debug outputs for intermediate control path signals
+        db_is_alignShifted : out std_logic;
+        db_is_bAligned     : out std_logic;
+        db_is_aAligned     : out std_logic;
+        db_is_alignDone    : out std_logic;
+        db_is_sameValSub   : out std_logic;
+        db_is_nmrlRSCheck  : out std_logic;
+        db_is_sgfdSub      : out std_logic;
+        db_is_BsubANRes    : out std_logic;
+        db_is_AsubBPRes    : out std_logic;
+        db_is_BsubAPres    : out std_logic;
+        db_is_AsubBNres    : out std_logic;
+        db_is_nmrlLSCheck  : out std_logic;
+        db_is_roundCheck   : out std_logic
     );
 end fpAdd_dbg;
 
@@ -75,6 +89,22 @@ architecture Structural of fpAdd_dbg is
     signal alu32bCout, roundUp : std_logic;
     signal shiftRegMSB, shiftReg2ndMSB : std_logic;
 
+    -- internal debug signals from control path
+    signal is_alignShifted : std_logic;
+    signal is_bAligned     : std_logic;
+    signal is_aAligned     : std_logic;
+    signal is_alignDone    : std_logic;
+    signal is_sameValSub   : std_logic;
+    signal is_nmrlRSCheck  : std_logic;
+    signal is_sgfdSub      : std_logic;
+    signal is_BsubANRes    : std_logic;
+    signal is_AsubBPRes    : std_logic;
+    signal is_BsubAPres    : std_logic;
+    signal is_AsubBNres    : std_logic;
+    signal is_nmrlLSCheck  : std_logic;
+    signal is_roundCheck   : std_logic;
+
+
     component fpAddCP is
         port(
             clock, reset : in std_logic;
@@ -96,7 +126,23 @@ architecture Structural of fpAdd_dbg is
             shiftRegMSB, shiftReg2ndMSB : in std_logic;
 
             db_state : out std_logic_vector(20 downto 0);
-            db_dFFin : out std_logic_vector(20 downto 0)
+            db_dFFin : out std_logic_vector(20 downto 0);
+
+            -- debug outputs for intermediate signals
+            db_is_alignShifted : out std_logic;
+            db_is_bAligned     : out std_logic;
+            db_is_aAligned     : out std_logic;
+            db_is_alignDone    : out std_logic;
+            db_is_sameValSub   : out std_logic;
+            db_is_nmrlRSCheck  : out std_logic;
+            db_is_sgfdSub      : out std_logic;
+            db_is_BsubANRes    : out std_logic;
+            db_is_AsubBPRes    : out std_logic;
+            db_is_BsubAPres    : out std_logic;
+            db_is_AsubBNres    : out std_logic;
+            db_is_nmrlLSCheck  : out std_logic;
+            db_is_roundCheck   : out std_logic
+
         );
     end component;
 
@@ -178,6 +224,22 @@ begin
     -- db_cs_alu8bAddBarSub     <= alu8bAddBarSub;
     -- db_cs_alu32bAddBarSub    <= alu32bAddBarSub;
 
+    db_is_alignShifted <= is_alignShifted;
+    db_is_bAligned     <= is_bAligned;
+    db_is_aAligned     <= is_aAligned;
+    db_is_alignDone    <= is_alignDone;
+    db_is_sameValSub   <= is_sameValSub;
+    db_is_nmrlRSCheck  <= is_nmrlRSCheck;
+    db_is_sgfdSub      <= is_sgfdSub;
+    db_is_BsubANRes    <= is_BsubANRes;
+    db_is_AsubBPRes    <= is_AsubBPRes;
+    db_is_BsubAPres    <= is_BsubAPres;
+    db_is_AsubBNres    <= is_AsubBNres;
+    db_is_nmrlLSCheck  <= is_nmrlLSCheck;
+    db_is_roundCheck   <= is_roundCheck;
+
+
+
     controlP: fpAddCP
         port map (
             clock        => clk,
@@ -225,7 +287,22 @@ begin
             shiftReg2ndMSB => shiftReg2ndMSB,
 
             db_state     => db_state,
-            db_dFFin     => db_dFFin
+            db_dFFin     => db_dFFin,
+
+            -- intermediate signal debug outputs
+            db_is_alignShifted => is_alignShifted,
+            db_is_bAligned     => is_bAligned,
+            db_is_aAligned     => is_aAligned,
+            db_is_alignDone    => is_alignDone,
+            db_is_sameValSub   => is_sameValSub,
+            db_is_nmrlRSCheck  => is_nmrlRSCheck,
+            db_is_sgfdSub      => is_sgfdSub,
+            db_is_BsubANRes    => is_BsubANRes,
+            db_is_AsubBPRes    => is_AsubBPRes,
+            db_is_BsubAPres    => is_BsubAPres,
+            db_is_AsubBNres    => is_AsubBNres,
+            db_is_nmrlLSCheck  => is_nmrlLSCheck,
+            db_is_roundCheck   => is_roundCheck
         );
 
     dataP: fpAddDP

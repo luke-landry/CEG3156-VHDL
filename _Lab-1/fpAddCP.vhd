@@ -25,7 +25,23 @@ entity fpAddCP is
         
         -- debug outputs
         db_state : out std_logic_vector(20 downto 0);
-        db_dFFin : out std_logic_vector(20 downto 0)
+        db_dFFin : out std_logic_vector(20 downto 0);
+
+        -- debug outputs for intermediate signals
+        db_is_alignShifted : out std_logic;
+        db_is_bAligned     : out std_logic;
+        db_is_aAligned     : out std_logic;
+        db_is_alignDone    : out std_logic;
+        db_is_sameValSub   : out std_logic;
+        db_is_nmrlRSCheck  : out std_logic;
+        db_is_sgfdSub      : out std_logic;
+        db_is_BsubANRes    : out std_logic;
+        db_is_AsubBPRes    : out std_logic;
+        db_is_BsubAPres    : out std_logic;
+        db_is_AsubBNres    : out std_logic;
+        db_is_nmrlLSCheck  : out std_logic;
+        db_is_roundCheck   : out std_logic
+
     );
 end fpAddCP;
 
@@ -166,5 +182,19 @@ begin
     -- debug outputs
     db_state <= s;
     db_dFFin <= d;
+
+    db_is_alignShifted <= s_alignShifted;
+    db_is_bAligned     <= s_bAligned;
+    db_is_aAligned     <= s_aAligned;
+    db_is_alignDone    <= s_alignDone;
+    db_is_sameValSub   <= s_sameValSub;
+    db_is_nmrlRSCheck  <= s_nmrlRSCheck;
+    db_is_sgfdSub      <= s_sgfdSub;
+    db_is_BsubANRes    <= s_BsubANRes;
+    db_is_AsubBPRes    <= s_AsubBPRes;
+    db_is_BsubAPres    <= s_BsubAPres;
+    db_is_AsubBNres    <= s_AsubBNres;
+    db_is_nmrlLSCheck  <= s_nmrlLSCheck;
+    db_is_roundCheck   <= s_roundCheck;
 
 end architecture rtl;
