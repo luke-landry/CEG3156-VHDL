@@ -153,7 +153,7 @@ begin
         n => 8
     )
     port map(
-        d => '0' & exponentA,
+        d => '0' & exponentB,
         clk => gClock,
         load => lEB,
         reset => gReset,
