@@ -26,6 +26,7 @@ architecture rtl of fpMultCP is
 
 begin
 
+    -- State logic
     int_d(0) <= not(reset);
     int_d(1) <= state(0) and reset;
     int_d(2) <= state(1) and reset;
@@ -36,6 +37,7 @@ begin
     int_d(7) <= state(6) and v and reset;
     int_d(8) <= ((state(5) and ((eq1) or (not(rORs) and not(eq2)))) or (state(6) and not(v)) or (state(7))) and reset;
 
+    -- Generate 9 D flip flops
     genDFF : for i in 8 downto 0 generate
         dff1 : d_FF_ASR
         port map(
@@ -48,6 +50,7 @@ begin
         );
     end generate;
 
+    -- State based outputs
     lA <= state(0); 
     lB <= state(0);
     lEA <= state(0);
