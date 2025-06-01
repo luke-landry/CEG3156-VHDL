@@ -4,7 +4,7 @@ USE IEEE.std_logic_1164.all;
 -- 8 bit register
 entity regNASR is
     generic(
-        n : integer
+        n : integer := 8
     );
     port ( 
             d : in std_logic_vector(n-1 downto 0); -- n bit input vector
@@ -34,6 +34,7 @@ architecture rtl of regNASR is
     end component;
 begin
     
+    -- Generate Muxes
     gen_m2to1 : for i in n-1 downto 0 generate
         MuxD : m2to1
         port map (
@@ -44,6 +45,7 @@ begin
         );
     end generate;
 
+    -- Generate D Flip Flops
     gen_dFF : for i in n-1 downto 0 generate
         dFFB : d_FF_ASR
         port map (

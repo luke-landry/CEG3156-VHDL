@@ -101,6 +101,7 @@ architecture rtl of fpMultDP is
 
 begin
 
+    -- Sign registers
     signAReg : d_FF_ASR
     port map(
         i_set => '1', 
@@ -121,6 +122,7 @@ begin
         o_qBar => open
     );
 
+    -- Output sign logic
     sOQ <= sAQ xor sBQ;
 
     signOReg : d_FF_ASR
@@ -133,6 +135,7 @@ begin
         o_qBar => open
     );
 
+    -- Exponent registers
     expAReg : regNASR
     generic map(
         n => 8
@@ -157,6 +160,7 @@ begin
         q => lBQ
     );
 
+    --  Mantissa registers
     manAReg : regNASR
     generic map(
         n => 8
@@ -181,6 +185,7 @@ begin
         q => mBQ
     );
 
+    -- 18 bit shift register selection logic and init
     shiftSel(0) <= slMR;
     shiftSel(1) <= lMR;
     reg18 : shiftRegN
@@ -197,6 +202,7 @@ begin
         reset => gReset
     );
 
+    -- Output registers
     expOut : regNASR
     generic map(
         n => 8
@@ -221,6 +227,7 @@ begin
         q => lMOQ
     );
 
+    -- Adders
     adder0 : adder8bit
     port map(
         x => mux5Q,
@@ -239,6 +246,7 @@ begin
         cOut => overF
     );
 
+    -- 9 bit row multiplier
     multiplier : u_mult_9b
     port map(
             opA => '1' & mAQ, 
@@ -246,6 +254,7 @@ begin
             res => mult9Q
     );
 
+    -- Muxes
     mux2_0 : m8x2to1
     port map(
         d0 => lEOQ,
@@ -273,6 +282,7 @@ begin
         q => mux0Q
     );
 
+    -- Comparators
     comp0 : comp1bit
     port map(
         x => '1',
@@ -300,11 +310,16 @@ begin
         greater => open
     );
 
+    -- Round or sticky bit logic
     rORs <= reg18Q(7) or reg18Q(6) or reg18Q(5) or reg18Q(4) or reg18Q(3) or reg18Q(2) or reg18Q(1) or reg18Q(0);
 
+    -- Overflow signal for normalization
     v <= overF;
-    -- overFlow <= overF;
+
+    -- There will never be overflow in multiplication
     overFlow <= '0';
+
+    -- Load outputs
     exponentOut <= lEOQ(6 downto 0);
     mantissaOut <= lMOQ;
 
