@@ -20,6 +20,8 @@ entity fpAdd_dbg is
         -- debug outputs
         db_state : out std_logic_vector(20 downto 0);
         db_dFFin : out std_logic_vector(20 downto 0);
+        db_aState : out std_logic_vector(5 downto 0);
+        db_aDFFin : out std_logic_vector(5 downto 0);
         db_expA  : out std_logic_vector(7 downto 0);
         db_expB  : out std_logic_vector(7 downto 0);
         db_expDif : out std_logic_vector(7 downto 0);
@@ -37,18 +39,6 @@ entity fpAdd_dbg is
         db_ss_roundUp            : out std_logic;
         db_ss_shiftRegMSB : out std_logic;
         db_ss_shiftReg2ndMSB : out std_logic;
-
-        -- debug control signals
-        -- db_cs_loadSignA, db_cs_loadExpA, db_cs_loadSgfdA : out std_logic;
-        -- db_cs_loadSignB, db_cs_loadExpB, db_cs_loadSgfdB : out std_logic;
-        -- db_cs_selLdSgfdAShR, db_cs_selLdSgfdBShR, db_cs_selLdManResClr : out std_logic;
-        -- db_cs_selAlu8bX, db_cs_selAlu8bY, db_cs_selAlu32bX, db_cs_selAlu32bY : out std_logic_vector(1 downto 0);
-        -- db_cs_selLdShR, db_cs_selLdExpRes : out std_logic_vector(1 downto 0);
-        -- db_cs_LSShR, db_cs_RSShR, db_cs_loadShR : out std_logic;
-        -- db_cs_loadExpDif, db_cs_loadShiftCount : out std_logic;
-        -- db_cs_loadSignRes, db_cs_loadExpRes, db_cs_loadManRes : out std_logic;
-        -- db_cs_clrSignRes, db_cs_setSignRes, db_cs_setOverflow : out std_logic;
-        -- db_cs_alu8bAddBarSub, db_cs_alu32bAddBarSub : out std_logic;
 
         -- debug outputs for intermediate control path signals
         db_is_alignShifted : out std_logic;
@@ -127,6 +117,8 @@ architecture Structural of fpAdd_dbg is
 
             db_state : out std_logic_vector(20 downto 0);
             db_dFFin : out std_logic_vector(20 downto 0);
+            db_aState : out std_logic_vector(5 downto 0);
+            db_aDFFin : out std_logic_vector(5 downto 0);       
 
             -- debug outputs for intermediate signals
             db_is_alignShifted : out std_logic;
@@ -195,35 +187,6 @@ begin
     db_ss_shiftRegMSB <= shiftRegMSB;
     db_ss_shiftReg2ndMSB <= shiftReg2ndMSB;
 
-    -- db_cs_loadSignA          <= loadSignA;
-    -- db_cs_loadExpA           <= loadExpA;
-    -- db_cs_loadSgfdA          <= loadSgfdA;
-    -- db_cs_loadSignB          <= loadSignB;
-    -- db_cs_loadExpB           <= loadExpB;
-    -- db_cs_loadSgfdB          <= loadSgfdB;
-    -- db_cs_selLdSgfdAShR      <= selLdSgfdAShR;
-    -- db_cs_selLdSgfdBShR      <= selLdSgfdBShR;
-    -- db_cs_selLdManResClr     <= selLdManResClr;
-    -- db_cs_selAlu8bX          <= selAlu8bX;
-    -- db_cs_selAlu8bY          <= selAlu8bY;
-    -- db_cs_selAlu32bX         <= selAlu32bX;
-    -- db_cs_selAlu32bY         <= selAlu32bY;
-    -- db_cs_selLdShR           <= selLdShR;
-    -- db_cs_selLdExpRes        <= selLdExpRes;
-    -- db_cs_LSShR              <= LSShR;
-    -- db_cs_RSShR              <= RSShR;
-    -- db_cs_loadShR            <= loadShR;
-    -- db_cs_loadExpDif         <= loadExpDif;
-    -- db_cs_loadShiftCount     <= loadShiftCount;
-    -- db_cs_loadSignRes        <= loadSignRes;
-    -- db_cs_loadExpRes         <= loadExpRes;
-    -- db_cs_loadManRes         <= loadManRes;
-    -- db_cs_clrSignRes         <= clrSignRes;
-    -- db_cs_setSignRes         <= setSignRes;
-    -- db_cs_setOverflow        <= setOverflow;
-    -- db_cs_alu8bAddBarSub     <= alu8bAddBarSub;
-    -- db_cs_alu32bAddBarSub    <= alu32bAddBarSub;
-
     db_is_alignShifted <= is_alignShifted;
     db_is_bAligned     <= is_bAligned;
     db_is_aAligned     <= is_aAligned;
@@ -237,8 +200,6 @@ begin
     db_is_AsubBNres    <= is_AsubBNres;
     db_is_nmrlLSCheck  <= is_nmrlLSCheck;
     db_is_roundCheck   <= is_roundCheck;
-
-
 
     controlP: fpAddCP
         port map (
@@ -288,6 +249,8 @@ begin
 
             db_state     => db_state,
             db_dFFin     => db_dFFin,
+            db_aState    => db_aState,
+            db_aDFFin    => db_aDFFin,
 
             -- intermediate signal debug outputs
             db_is_alignShifted => is_alignShifted,

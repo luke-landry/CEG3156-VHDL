@@ -26,6 +26,8 @@ entity fpAddCP is
         -- debug outputs
         db_state : out std_logic_vector(20 downto 0);
         db_dFFin : out std_logic_vector(20 downto 0);
+        db_aState : out std_logic_vector(5 downto 0);
+        db_aDFFin : out std_logic_vector(5 downto 0);
 
         -- debug outputs for intermediate signals
         db_is_alignShifted : out std_logic;
@@ -57,13 +59,15 @@ architecture rtl of fpAddCP is
     end component;
 
     constant num_states : integer := 21;
+    constant num_additional_states : integer := 6;
 
     -- flip flop input (d) and state (s) signals
     signal d : std_logic_vector((num_states-1) downto 0);
     signal s : std_logic_vector((num_states-1) downto 0);
 
     -- additional states (added after initial design)
-    signal d0a, s0a : std_logic;
+    signal ad : std_logic_vector((num_additional_states-1) downto 0);
+    signal as : std_logic_vector((num_additional_states-1) downto 0);
 
     -- intermediate signals
     signal s_alignShifted, s_bAligned, s_aAligned, s_alignDone : std_logic;
@@ -84,7 +88,7 @@ begin
         o_qBar => open
     );
 
-    genDFF : for i in 1 to (num_states-1) generate
+    genDFFs : for i in 1 to (num_states-1) generate
         dff_si : d_FF_ASR
         port map(
             i_set => '1', 
@@ -96,34 +100,34 @@ begin
         );
     end generate;
 
-    -- additional states
-    dff_s0a : d_FF_ASR
-    port map(
-        i_set => '1', -- set initial state on system reset
-        i_reset => reset,
-        i_d => d0a,
-        i_clock => clock,
-        o_q => s0a,
-        o_qBar => open
-    );
+    genDFFas: for i in 0 to (num_additional_states-1) generate
+        dff_ai : d_FF_ASR
+        port map(
+            i_set => '1', 
+            i_reset => reset,
+            i_d => ad(i),
+            i_clock => clock,
+            o_q => as(i),
+            o_qBar => open
+        );
+    end generate;
 
     s_alignShifted <= (s(2) or s(4) or s(6)) and (not shiftCountltExpDif);
     s_bAligned <= s_alignShifted and (not expAltB);
     s_aAligned <= s_alignShifted and expAltB;
-    s_alignDone <= s0a or s(7) or s(8);
+    s_alignDone <= as(0) or s(7) or s(8);
     s_sameValSub <= s_alignDone and (not signAeqB) and sgfdAeqB;
-    s_nmrlRSCheck <= (s(10) and (not alu32bCout)) or s(19);
-    s_sgfdSub <= s_alignDone and (not signAeqB) and (not sgfdAeqB);
+    s_nmrlRSCheck <= as(1);
+    s_sgfdSub <= as(4) and (not sgfdAeqB);
     s_BsubANRes <= s_sgfdSub and (not signAStored) and sgfdAltB;
     s_AsubBPRes <= s_sgfdSub and (not signAStored) and (not sgfdAltB);
     s_BsubAPres <= s_sgfdSub and signAStored and sgfdAltB;
     s_AsubBNres <= s_sgfdSub and signAStored and (not sgfdAltB);
-    s_nmrlLSCheck <= s(13) or s(14) or s(15) or s(16) or s(18);
-    s_roundCheck <= (s_nmrlRSCheck and (not shiftRegMSB)) or s(12) or (s_nmrlLSCheck and (not shiftReg2ndMSB));
+    s_nmrlLSCheck <= as(5) or s(18);
+    s_roundCheck <= as(2);
 
     d(0) <= '0';
-    d0a  <= s(0) and expAeqB;
-    d(1) <= s(0) and (not expAeqB);
+    d(1) <= as(3) and (not expAeqB);
     d(2) <= s(1) and (not expAltB);
     d(3) <= s(1) and expAltB;
     d(4) <= s(3);
@@ -139,10 +143,17 @@ begin
     d(14) <= s_AsubBPRes;
     d(15) <= s_BsubAPres;
     d(16) <= s_AsubBNres;
-    d(17) <= s_nmrlLSCheck and shiftReg2ndMSB;
+    d(17) <= s_nmrlLSCheck and (not shiftReg2ndMSB);
     d(18) <= s(17);
     d(19) <= s_roundCheck and roundUp;
     d(20) <= s_roundCheck and (not roundUp);
+
+    ad(0) <= as(3) and expAeqB;
+    ad(1) <= (s(10) and (not alu32bCout)) or s(19);
+    ad(2) <= (s_nmrlRSCheck and (not shiftRegMSB)) or s(12) or (s_nmrlLSCheck and shiftReg2ndMSB);
+    ad(3) <= s(0);
+    ad(4) <= s_alignDone and (not signAeqB);
+    ad(5) <= s(13) or s(14) or s(15) or s(16);
 
     loadSignA <= s(0);
     loadExpA <=  s(0);
@@ -171,7 +182,7 @@ begin
     loadExpDif <= s(1) or s(3);
     loadShiftCount <= s(5);
     loadSignRes <= s(10);
-    loadExpRes <= s0a or s(2) or s(4) or s(9) or s(12) or s(18);
+    loadExpRes <= as(0) or s(2) or s(4) or s(9) or s(12) or s(18);
     loadManRes <= s(9) or s(20);
     clrSignRes <= s(9) or s(14) or s(15);
     setSignRes <= s(13) or s(16);
@@ -182,6 +193,8 @@ begin
     -- debug outputs
     db_state <= s;
     db_dFFin <= d;
+    db_aState <= as;
+    db_aDFFin <= ad;
 
     db_is_alignShifted <= s_alignShifted;
     db_is_bAligned     <= s_bAligned;
