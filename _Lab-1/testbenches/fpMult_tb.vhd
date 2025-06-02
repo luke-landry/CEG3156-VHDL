@@ -13,7 +13,7 @@ end fpMultTLE_tb;
 architecture behavioral of fpMultTLE_tb is
 
     -- Component Declaration for the Unit Under Test (UUT)
-    component fpMultTLE is
+    component fpMult is
         Port (
             gClock, gReset : in  std_logic;
             signA, signB : in  std_logic;
@@ -75,7 +75,7 @@ architecture behavioral of fpMultTLE_tb is
 begin
 
     -- Instantiate the Unit Under Test (UUT)
-    uut : fpMultTLE
+    uut : fpMult
         port map (
             gClock     => gClock_s,
             gReset     => gReset_s,
