@@ -13,6 +13,7 @@ end alu8b;
 
 architecture rtl of alu8b is
     signal carrys : std_logic_vector(7 downto 1);
+    signal resTemp : std_logic_vector(7 downto 0);
     signal setOut : std_logic;
 
 component aluBlockGen is
@@ -42,7 +43,7 @@ begin
             aInv => '0', 
             bInv => op(2),
             op => op(1 downto 0),
-            result => result(0), 
+            result => resTemp(0), 
             cOut => carrys(1)
         );
 
@@ -57,7 +58,7 @@ begin
             aInv => '0', 
             bInv => op(2),
             op => op(1 downto 0),
-            result => result(i), 
+            result => resTemp(i), 
             cOut => carrys(i+1)
         );
     end generate;
@@ -71,9 +72,12 @@ begin
             aInv => '0', 
             bInv => op(2),
             op => op(1 downto 0),
-            result => result(7), 
+            result => resTemp(7), 
             cOut => open,
             set => setOut
         );
+
+        result <= resTemp;
+        zero <= not(resTemp(0) or resTemp(1) or resTemp(2) or resTemp(3) or resTemp(4) or resTemp(5) or resTemp(6) or resTemp(7));
 
 end architecture rtl;
