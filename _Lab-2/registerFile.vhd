@@ -50,7 +50,7 @@ component d3to8 is
 end component;
 
 begin
-    gen_dFF : for i in 7 downto 0 generate
+    gen_reg : for i in 7 downto 0 generate
         regN : regNASR
         generic map(
             n => 8
