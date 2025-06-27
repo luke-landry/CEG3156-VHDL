@@ -344,7 +344,14 @@ begin
             q  => branch_alu
         );
 
-    jump_target <= instruction(7 downto 0);
+    jump_target(7) <= instruction(5);
+    jump_target(6) <= instruction(4);
+    jump_target(5) <= instruction(3);
+    jump_target(4) <= instruction(2);
+    jump_target(3) <= instruction(1);
+    jump_target(2) <= instruction(0);
+    jump_target(1) <= '0';
+    jump_target(0) <= '0';
 
     jump_mux : m8x2to1
         port map (
