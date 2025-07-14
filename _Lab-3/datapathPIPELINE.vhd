@@ -62,6 +62,14 @@ architecture Structural of datapathPIPELINE is
     
     signal output_mux_vect : std_logic_vector(7 downto 0);
 
+    -- Pipelines
+    signal ifIDin, ifIDout : std_logic_vector(63 downto 0);
+    signal idExin, idExout : std_logic_vector(63 downto 0);
+    signal exMemin, exMemout : std_logic_vector(63 downto 0);
+    signal memWbin, memWbout : std_logic_vector(63 downto 0);
+
+    signal ifIdWrite : std_logic;
+
 
 -- COMPONENTS``
 
@@ -169,6 +177,22 @@ architecture Structural of datapathPIPELINE is
         );
     end component;
 
+    component forwardUnit is
+        port(
+            exMemRegWrite : in std_logic;
+            exMemRegRd, memWbRedRd, idExRegRs, idExRegRt : in std_logic_vector(4 downto 0);
+            fA, fB : out std_logic_vector(1 downto 0)
+        );
+    end component;
+
+    component hazDetecUnit is
+        port(
+            idExMemRead : in std_logic;
+            idExRegRt, ifIdRegRs, ifIdRegRt : in std_logic_vector(4 downto 0);
+            pcWrite, ifIdWrite, controlMux : out std_logic
+        );
+    end component;
+
 
 begin
 
@@ -184,6 +208,18 @@ begin
             reset => reset,
             q => pc
         );
+            
+    -- PC + 4
+    pc_adder : aluNbit
+        generic map (n => 8)
+        port map (
+            a => pc,
+            b => "00000100",
+            addbar_sub => '0',
+            result => pc_plus_4,
+            cOut => open,
+            zero => open
+        );
 
     -- Instruction Memory (LPM ROM 256 x 32)
     IMEM : instr_mem
@@ -192,6 +228,47 @@ begin
             clock   => clk,
             q       => instruction
         );
+
+        -- Needs to be changed
+    branch_mux : m8x2to1
+        port map (
+            d0 => pc_plus_4,
+            d1 => branch_target,
+            s0 => branch_control,
+            q  => branch_alu
+        );
+        
+        -- jump_target(7) <= instruction(5);
+        -- jump_target(6) <= instruction(4);
+        -- jump_target(5) <= instruction(3);
+        -- jump_target(4) <= instruction(2);
+        -- jump_target(3) <= instruction(1);
+        -- jump_target(2) <= instruction(0);
+        -- jump_target(1) <= '0';
+        -- jump_target(0) <= '0';
+
+        -- jump_mux : m8x2to1
+        --     port map (
+        --         d0 => branch_alu,
+        --         d1 => jump_target,
+        --         s0 => jump,
+        --         q  => next_pc
+        --     );
+    
+        ifIDin <= pc_plus_4 & instruction;
+    -- Pipeline IF/ID ########################
+        ifID: regNASR
+            generic map(
+                n => 64
+            )
+            port map( 
+                d => ifIDin,
+                clk => clk, 
+                load => ifIdWrite, 
+                reset => reset,
+                q => ifIDout
+            );
+    -- #######################################
 
     -- Control Unit
     U_Control : controlLogicUnit
@@ -208,76 +285,135 @@ begin
             ALUOp => alu_op
         );
 
-    -- Register File (8 registers x 8-bit)
-    U_RegFile : registerFile
-        port map (
-            clk => clk,
-            reset => reset,
-            readReg1 => instruction(23 downto 21),
-            readReg2 => instruction(18 downto 16),
-            writeRegister => write_reg_mux(2 downto 0),
-            writeData => write_data,
-            regWrite => reg_write,
-            readData1 => reg_data1,
-            readData2 => reg_data2
-        );
+        
+        -- Register File (8 registers x 8-bit)
+        U_RegFile : registerFile
+            port map (
+                clk => clk,
+                reset => reset,
+                readReg1 => instruction(23 downto 21),
+                readReg2 => instruction(18 downto 16),
+                writeRegister => write_reg_mux(2 downto 0),
+                writeData => write_data,
+                regWrite => reg_write,
+                readData1 => reg_data1,
+                readData2 => reg_data2
+            );
+    
+    
+        -- Sign Extend (8-bit immediate)
+        U_SignExt : signExt
+            port map (
+                inp => instruction(15 downto 0),
+                res => sign_ext_imm
+            );
+    
+        sign_ext_shift(7) <= sign_ext_imm(5);
+        sign_ext_shift(6) <= sign_ext_imm(4);
+        sign_ext_shift(5) <= sign_ext_imm(3);
+        sign_ext_shift(4) <= sign_ext_imm(2);
+        sign_ext_shift(3) <= sign_ext_imm(1);
+        sign_ext_shift(2) <= sign_ext_imm(0);
+        sign_ext_shift(1) <= '0';
+        sign_ext_shift(0) <= '0';
+
+        -- Branch target address
+        branch_adder : aluNbit
+            generic map (n => 8)
+            port map (
+                a => pc_plus_4,
+                b => sign_ext_shift,
+                addbar_sub => '0',
+                result => branch_target,
+                cOut => open,
+                zero => open
+            );
+
+        -- Fix
+        -- branch_control <= alu_zero and branch;
+
+        -- Hazard Detection Unit
+        U_HazDetec : hazDetecUnit
+            port map (
+                -- idExMemRead => idExMemRead,
+                -- idExRegRt   => idExRegRt,
+                -- ifIdRegRs   => ifIdRegRs,
+                -- ifIdRegRt   => ifIdRegRt,
+                -- pcWrite     => pcWrite,
+                -- ifIdWrite   => ifIdWrite,
+                -- controlMux  => controlMux
+            );
+        --  Control 9 bits, Rs 32 bits out, extended branch address 32 bits,  Rt 32 bits out , Rs 3 bits, Rt 3 bits, Rd 3 bits
+        idExin <= controlMuxOut & readReg1 & readReg2 & sign_ext_imm & instruction(23 downto 21) & instruction(18 downto 16) & instruction(13 downto 11);
+    -- Pipeline ID/EX ########################
+        idEx: regNASR
+            generic map(
+                n => 114
+            )
+            port map( 
+                d => idExin,
+                clk => clk, 
+                load => '1', 
+                reset => reset,
+                q => idExout
+            );
+    -- #######################################
+
+    
+        -- ALU Control 
+        U_ALUCtrl : aluControlUnit
+            port map (
+                ALUOp => alu_op,
+                F => instruction(4 downto 0),
+                Operation => alu_control
+            );
+    
+        -- ALU Input MUX
+        alu_mux : m8x2to1
+            port map (
+                d0 => reg_data2,
+                d1 => sign_ext_imm(7 downto 0),
+                s0 => alu_src,
+                q  => alu_input2
+            );
+    
+    
+        -- ALU
+        U_ALU : alu8b
+            port map (
+                a => reg_data1,
+                b => alu_input2,
+                op => alu_control,
+                zero => alu_zero,
+                result => alu_result
+            );
+
+        -- Forwarding Unit
+        U_ForwardUnit : forwardUnit
+            port map (
+                -- exMemRegWrite => exMemRegWrite,
+                -- exMemRegRd    => exMemRegRd,
+                -- memWbRedRd    => memWbRedRd,
+                -- idExRegRs     => idExRegRs,
+                -- idExRegRt     => idExRegRt,
+                -- fA            => fA,
+                -- fB            => fB
+            );
 
 
-    -- Sign Extend (8-bit immediate)
-    U_SignExt : signExt
-        port map (
-            inp => instruction(15 downto 0),
-            res => sign_ext_imm
-        );
-
-    sign_ext_shift(7) <= sign_ext_imm(5);
-    sign_ext_shift(6) <= sign_ext_imm(4);
-    sign_ext_shift(5) <= sign_ext_imm(3);
-    sign_ext_shift(4) <= sign_ext_imm(2);
-    sign_ext_shift(3) <= sign_ext_imm(1);
-    sign_ext_shift(2) <= sign_ext_imm(0);
-    sign_ext_shift(1) <= '0';
-    sign_ext_shift(0) <= '0';
-
-    -- ALU Control 
-    U_ALUCtrl : aluControlUnit
-        port map (
-            ALUOp => alu_op,
-            F => instruction(4 downto 0),
-            Operation => alu_control
-        );
-
-    -- ALU Input MUX
-    alu_mux : m8x2to1
-        port map (
-            d0 => reg_data2,
-            d1 => sign_ext_imm(7 downto 0),
-            s0 => alu_src,
-            q  => alu_input2
-        );
-
-
-    -- ALU
-    U_ALU : alu8b
-        port map (
-            a => reg_data1,
-            b => alu_input2,
-            op => alu_control,
-            zero => alu_zero,
-            result => alu_result
-        );
-
-
-    -- Data Memory (LPM RAM_DQ 256 x 8)
-    -- data_mem: entity work.data_memory_256x8
-    --     port map (
-    --         clk         => clk,
-    --         address     => alu_result,
-    --         write_data  => reg_data2,
-    --         read_data   => data_read,
-    --         mem_read    => mem_read,
-    --         mem_write   => mem_write
-    --     );
+    -- Pipeline EX/MEM ########################
+        ifID: regNASR
+            generic map(
+                n => 64
+            )
+            port map( 
+                d => ifIDin,
+                clk => clk, 
+                load => ifIdWrite, 
+                reset => reset,
+                q => ifIDout
+            );
+    -- #######################################
 
     DMEM : data_mem
         port map (
@@ -288,6 +424,20 @@ begin
             q       => data_read
         );
 
+    -- Pipeline MEM/WB ########################
+        ifID: regNASR
+            generic map(
+                n => 64
+            )
+            port map( 
+                d => ifIDin,
+                clk => clk, 
+                load => ifIdWrite, 
+                reset => reset,
+                q => ifIDout
+            );
+    -- #######################################
+    
     -- Write Back MUX
     write_back_mux : m8x2to1
         port map (
@@ -297,69 +447,28 @@ begin
             q  => write_data
         );
 
-    write_reg_a <= "00000" &instruction(18 downto 16);
-    write_reg_b <= "00000" &instruction(13 downto 11);
-
-    -- Write Register MUX (reg_dst)
-    reg_dst_mux : m8x2to1
-        port map (
-            d0 => write_reg_a,
-            d1 => write_reg_b,
-            s0 => reg_dst,
-            q  => write_reg_mux
-        );
-
-    -- PC + 4
-    pc_adder : aluNbit
-        generic map (n => 8)
-        port map (
-            a => pc,
-            b => "00000100",
-            addbar_sub => '0',
-            result => pc_plus_4,
-            cOut => open,
-            zero => open
-        );
-
-    -- Branch target address
-    branch_adder : aluNbit
-        generic map (n => 8)
-        port map (
-            a => pc_plus_4,
-            b => sign_ext_shift,
-            addbar_sub => '0',
-            result => branch_target,
-            cOut => open,
-            zero => open
-        );
 
 
-    branch_control <= alu_zero and branch;
+    -- Changed with pipeline
+    -- write_reg_a <= "00000" &instruction(18 downto 16);
+    -- write_reg_b <= "00000" &instruction(13 downto 11);
 
-    branch_mux : m8x2to1
-        port map (
-            d0 => pc_plus_4,
-            d1 => branch_target,
-            s0 => branch_control,
-            q  => branch_alu
-        );
+    -- -- Write Register MUX (reg_dst)
+    -- reg_dst_mux : m8x2to1
+    --     port map (
+    --         d0 => write_reg_a,
+    --         d1 => write_reg_b,
+    --         s0 => reg_dst,
+    --         q  => write_reg_mux
+    --     );
 
-    jump_target(7) <= instruction(5);
-    jump_target(6) <= instruction(4);
-    jump_target(5) <= instruction(3);
-    jump_target(4) <= instruction(2);
-    jump_target(3) <= instruction(1);
-    jump_target(2) <= instruction(0);
-    jump_target(1) <= '0';
-    jump_target(0) <= '0';
 
-    jump_mux : m8x2to1
-        port map (
-            d0 => branch_alu,
-            d1 => jump_target,
-            s0 => jump,
-            q  => next_pc
-        );
+
+
+
+
+
+
 
 
 
