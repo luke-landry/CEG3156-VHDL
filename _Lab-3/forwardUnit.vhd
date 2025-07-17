@@ -5,23 +5,81 @@ USE ieee.std_logic_1164.ALL;
 entity forwardUnit is
     port(
         exMemRegWrite : in std_logic;
-        exMemRegRd, memWbRedRd, idExRegRs, idExRegRt : in std_logic_vector(4 downto 0);
+        exMemRegRd, memWbRedRd, idExRegRs, idExRegRt : in std_logic_vector(2 downto 0);
         fA, fB : out std_logic_vector(1 downto 0)
     );
 end forwardUnit;
 
 architecture rtl of forwardUnit is
     signal enable : std_logic;
-    signal xnors : std_logic_vector(3 downto 0);
+    signal comps, xnors : std_logic_vector(3 downto 0);
+
+        component compNbit is
+        generic(
+            n : integer -- must be >= 3
+        );
+        port(
+            a, b : in std_logic_vector((n-1) downto 0);
+            altb, aeqb, agtb : out std_logic
+        );
+    end component compNbit;
     
 begin
 
     enable <= exMemRegWrite and (not (exMemRegRd));
 
-    xnors(0) <= ((exMemRegRd xnor idExRegRs) and "1111") and enable;
-    xnors(1) <= ((exMemRegRd xnor idExRegRt) and "1111") and enable;
-    xnors(2) <= ((memWbRedRd xnor idExRegRs) and "1111") and enable;
-    xnors(3) <= ((memWbRedRd xnor idExRegRt) and "1111") and enable;
+    comp0: compNbit
+        generic map(
+            n => 8
+        )
+        port map(
+            a => exMemRegRd, 
+            b  => idExRegRs,
+            altb => open, 
+            aeqb => comps(0), 
+            agtb => open
+        );
+
+    comp1: compNbit
+        generic map(
+            n => 8
+        )
+        port map(
+            a => exMemRegRd, 
+            b  => idExRegRt,
+            altb => open, 
+            aeqb => comps(1), 
+            agtb => open
+        );
+
+    comp2: compNbit
+        generic map(
+            n => 8
+        )
+        port map(
+            a => memWbRedRd, 
+            b  => idExRegRs,
+            altb => open, 
+            aeqb => comps(2), 
+            agtb => open
+        );
+
+    comp3: compNbit
+        generic map(
+            n => 8
+        )
+        port map(
+            a => memWbRedRd, 
+            b  => idExRegRt,
+            altb => open, 
+            aeqb => comps(3), 
+            agtb => open
+        );
+
+    xnors(0) <= comps(0) and enable;
+    xnors(1) <= comps(1) and enable;
+    xnors(2) <= comps(2) and enable;
+    xnors(3) <= comps(3) and enable;
 
     fA(1) <= xnors(0);
     fA(0) <= not(xnors(0)) and xnors(2);
