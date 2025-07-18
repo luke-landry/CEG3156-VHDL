@@ -26,11 +26,10 @@ architecture rtl of hazDetecUnit is
     
 begin
 
-    enable <= exMemRegWrite and (not (exMemRegRd));
 
     comp0: compNbit
         generic map(
-            n => 8
+            n => 3
         )
         port map(
             a => idExRegRt, 
@@ -42,7 +41,7 @@ begin
 
     comp1: compNbit
         generic map(
-            n => 8
+            n => 3
         )
         port map(
             a => idExRegRt, 

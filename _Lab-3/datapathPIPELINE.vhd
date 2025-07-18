@@ -72,6 +72,8 @@ architecture Structural of datapathPIPELINE is
     signal controlMuxIn, controlMuxOut : std_logic_vector(7 downto 0);
     signal r_dest_mux_out : std_logic_vector(7 downto 0);
 
+    signal fA, fB : std_logic_vector(1 downto 0);
+
 -- COMPONENTS``
 
     component instr_mem
@@ -196,7 +198,7 @@ architecture Structural of datapathPIPELINE is
     component forwardUnit is
         port(
             exMemRegWrite : in std_logic;
-            exMemRegRd, memWbRedRd, idExRegRs, idExRegRt : in std_logic_vector(4 downto 0);
+            exMemRegRd, memWbRedRd, idExRegRs, idExRegRt : in std_logic_vector(2 downto 0);
             fA, fB : out std_logic_vector(1 downto 0)
         );
     end component;
@@ -204,7 +206,7 @@ architecture Structural of datapathPIPELINE is
     component hazDetecUnit is
         port(
             idExMemRead : in std_logic;
-            idExRegRt, ifIdRegRs, ifIdRegRt : in std_logic_vector(4 downto 0);
+            idExRegRt, ifIdRegRs, ifIdRegRt : in std_logic_vector(2 downto 0);
             pcWrite, ifIdWrite, controlMux : out std_logic
         );
     end component;
@@ -311,7 +313,7 @@ begin
                 ALUOp => alu_op
             );
 
-        controlMuxIn <= reg_write & mem_to_reg & mem_read & mem_write & alu_op & alu_src;
+        controlMuxIn <= reg_write & mem_to_reg & mem_read & mem_write & reg_dst & alu_op & alu_src;
         -- Control mux
         cntrl_mux : m8x2to1
             port map (
@@ -385,14 +387,14 @@ begin
             port map (
                 idExMemRead => idExout(38),
                 idExRegRt   => idExout(5 downto 3),
-                ifIdRegRs   => ifIDout(22 downto 21),
+                ifIdRegRs   => ifIDout(23 downto 21),
                 ifIdRegRt   => ifIDout(18 downto 16),
                 pcWrite     => pcWrite,
                 ifIdWrite   => ifIdWrite,
                 controlMux  => controlMux
             );
         --  R-type code 5 bits, Control 8 bits, Rs 8 bits, address 8 bits,  Rt 8 bits , Rs 3 bits, Rt 3 bits, Rd 3 bits.
-        idExin <= ifIDout(4 downto 0) & controlMuxOut & readReg1 & readReg2 & sign_ext_shift & ifIDout(23 downto 21) & ifIDout(18 downto 16) & ifIDout(13 downto 11);
+        idExin <= ifIDout(4 downto 0) & controlMuxOut & reg_data1 & reg_data2 & sign_ext_shift & ifIDout(23 downto 21) & ifIDout(18 downto 16) & ifIDout(13 downto 11);
     -- Pipeline ID/EX ########################
         idEx: regNASR
             generic map(
@@ -476,7 +478,7 @@ begin
     -- Pipeline EX/MEM ########################
         exMem: regNASR
             generic map(
-                n => 15
+                n => 23
             )
             port map( 
                 d => exMemin,

@@ -26,11 +26,11 @@ architecture rtl of forwardUnit is
     
 begin
 
-    enable <= exMemRegWrite and (not (exMemRegRd));
+    enable <= exMemRegWrite and (not (exMemRegRd(0))) and (not (exMemRegRd(1))) and (not (exMemRegRd(2)));
 
     comp0: compNbit
         generic map(
-            n => 8
+            n => 3
         )
         port map(
             a => exMemRegRd, 
@@ -42,7 +42,7 @@ begin
 
     comp1: compNbit
         generic map(
-            n => 8
+            n => 3
         )
         port map(
             a => exMemRegRd, 
@@ -54,7 +54,7 @@ begin
 
     comp2: compNbit
         generic map(
-            n => 8
+            n => 3
         )
         port map(
             a => memWbRedRd, 
@@ -66,7 +66,7 @@ begin
 
     comp3: compNbit
         generic map(
-            n => 8
+            n => 3
         )
         port map(
             a => memWbRedRd, 
