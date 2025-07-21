@@ -26,7 +26,7 @@ architecture rtl of forwardUnit is
     
 begin
 
-    enable <= exMemRegWrite and (not (exMemRegRd(0))) and (not (exMemRegRd(1))) and (not (exMemRegRd(2)));
+    enable <= exMemRegWrite and (exMemRegRd(0) or exMemRegRd(1) or exMemRegRd(2));
 
     comp0: compNbit
         generic map(
