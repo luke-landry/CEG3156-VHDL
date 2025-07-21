@@ -2,6 +2,7 @@ lw $2, 0; $t2 = memory(00) = 55
 lw $3, 1; $t3 = memory(01) = AA
 sub $1, $2, $3; $t1 = $t2- $t3 = 55
 or $4, $1, $3; $t4 = $t1 or $t3 = FF
+% beq $1, $1, 20
 sw $4, 3; memory(03) = $t4 = FF
 add $1, $2, $3; $t1 = $t2 + $t3 = FF
 sw $1, 4; memory(04) = $t1 = FF
